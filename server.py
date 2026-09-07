@@ -100,7 +100,7 @@ def serve_http():
         server_socket.bind((HOST, HTTP_PORT))
         server_socket.listen()
 
-        print(f"HTTP listening on {HOST}:{HTTP_PORT}")
+        print(f"HTTP listening on {HOST}:{HTTP_PORT}", flush=True)
 
         while True:
             client_socket, client_address = server_socket.accept()
@@ -117,7 +117,7 @@ def serve_https(ssl_context):
         server_socket.bind((HOST, HTTPS_PORT))
         server_socket.listen()
 
-        print(f"HTTPS listening on {HOST}:{HTTPS_PORT}")
+        print(f"HTTPS listening on {HOST}:{HTTPS_PORT}", flush=True)
 
         while True:
             client_socket, client_address = server_socket.accept()
@@ -156,7 +156,7 @@ def create_ssl_context():
                 key_path = key_file.name
 
             context.load_cert_chain(certfile=cert_path, keyfile=key_path)
-            print("HTTPS enabled using TLS_CERT and TLS_KEY environment variables")
+            print("HTTPS enabled using TLS_CERT and TLS_KEY environment variables", flush=True)
             return context
         finally:
             if cert_path:
@@ -166,10 +166,10 @@ def create_ssl_context():
 
     if os.path.exists(CERT_FILE) and os.path.exists(KEY_FILE):
         context.load_cert_chain(certfile=CERT_FILE, keyfile=KEY_FILE)
-        print(f"HTTPS enabled using {CERT_FILE} and {KEY_FILE}")
+        print(f"HTTPS enabled using {CERT_FILE} and {KEY_FILE}", flush=True)
         return context
 
-    print("HTTPS disabled: missing TLS_CERT/TLS_KEY and local certificate files")
+    print("HTTPS disabled: missing TLS_CERT/TLS_KEY and local certificate files", flush=True)
     return None
 
 
