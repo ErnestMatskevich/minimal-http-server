@@ -1,6 +1,7 @@
 import os
 import socket
 import ssl
+import tempfile
 import threading
 import time
 
@@ -136,17 +137,49 @@ def serve_https(ssl_context):
             client_thread.start()
 
 
+def create_ssl_context():
+    tls_cert = os.environ.get("TLS_CERT")
+    tls_key = os.environ.get("TLS_KEY")
+    context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+
+    if tls_cert and tls_key:
+        cert_path = None
+        key_path = None
+
+        try:
+            with tempfile.NamedTemporaryFile("w", delete=False) as cert_file:
+                cert_file.write(tls_cert.replace("\\n", "\n"))
+                cert_path = cert_file.name
+
+            with tempfile.NamedTemporaryFile("w", delete=False) as key_file:
+                key_file.write(tls_key.replace("\\n", "\n"))
+                key_path = key_file.name
+
+            context.load_cert_chain(certfile=cert_path, keyfile=key_path)
+            print("HTTPS enabled using TLS_CERT and TLS_KEY environment variables")
+            return context
+        finally:
+            if cert_path:
+                os.remove(cert_path)
+            if key_path:
+                os.remove(key_path)
+
+    if os.path.exists(CERT_FILE) and os.path.exists(KEY_FILE):
+        context.load_cert_chain(certfile=CERT_FILE, keyfile=KEY_FILE)
+        print(f"HTTPS enabled using {CERT_FILE} and {KEY_FILE}")
+        return context
+
+    print("HTTPS disabled: missing TLS_CERT/TLS_KEY and local certificate files")
+    return None
+
+
 http_thread = threading.Thread(target=serve_http, daemon=True)
 http_thread.start()
 
-if os.path.exists(CERT_FILE) and os.path.exists(KEY_FILE):
-    context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
-    context.load_cert_chain(certfile=CERT_FILE, keyfile=KEY_FILE)
-
+context = create_ssl_context()
+if context:
     https_thread = threading.Thread(target=serve_https, args=(context,), daemon=True)
     https_thread.start()
-else:
-    print(f"HTTPS disabled: missing {CERT_FILE} or {KEY_FILE}")
 
 try:
     while True:
