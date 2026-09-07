@@ -10,6 +10,7 @@ HOST = "0.0.0.0"
 HTTP_PORT = int(os.environ.get("PORT", "8080"))
 HTTPS_PORT = 8443
 BUFFER_SIZE = 4096
+DEBUG = os.environ.get("DEBUG", "1") != "0"
 DOCUMENT_ROOT = os.path.abspath("www")
 CERT_FILE = os.path.join("certs", "server.crt")
 KEY_FILE = os.path.join("certs", "server.key")
@@ -27,13 +28,15 @@ def handle_client(client_socket, client_address):
     with client_socket:
         client_ip, client_port = client_address
         thread_name = threading.current_thread().name
-        print(f"Client connected from {client_ip}:{client_port} on {thread_name}")
+        if DEBUG:
+            print(f"Client connected from {client_ip}:{client_port} on {thread_name}")
 
         data = client_socket.recv(BUFFER_SIZE)
         request_text = data.decode("utf-8", errors="replace")
 
-        print("Received data:")
-        print(request_text)
+        if DEBUG:
+            print("Received data:")
+            print(request_text)
 
         request_line = request_text.splitlines()[0] if request_text else ""
         request_parts = request_line.split()
@@ -41,10 +44,11 @@ def handle_client(client_socket, client_address):
         if len(request_parts) == 3:
             method, path, version = request_parts
 
-            print(f"Method: {method}")
-            print(f"Path: {path}")
-            print(f"Version: {version}")
-            print(f"[{thread_name}] {client_ip}:{client_port} {method} {path}")
+            if DEBUG:
+                print(f"Method: {method}")
+                print(f"Path: {path}")
+                print(f"Version: {version}")
+                print(f"[{thread_name}] {client_ip}:{client_port} {method} {path}")
 
             if method != "GET":
                 status_line = "HTTP/1.1 405 Method Not Allowed"
@@ -54,7 +58,8 @@ def handle_client(client_socket, client_address):
                 url_path = path.split("?", 1)[0]
 
                 if url_path == "/slow":
-                    print(f"[{thread_name}] Slow processing started")
+                    if DEBUG:
+                        print(f"[{thread_name}] Slow processing started")
                     time.sleep(5)
                     status_line = "HTTP/1.1 200 OK"
                     content_type = "text/plain; charset=utf-8"
