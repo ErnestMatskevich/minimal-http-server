@@ -62,6 +62,7 @@ def handle_client(client_socket, client_address):
                 status_line = "HTTP/1.1 405 Method Not Allowed"
                 content_type = "text/plain; charset=utf-8"
                 body = "405 Method Not Allowed".encode("utf-8")
+                allow_header = "Allow: GET, HEAD, OPTIONS\r\n"
             else:
                 url_path = path.split("?", 1)[0]
 
