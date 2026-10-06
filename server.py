@@ -41,10 +41,11 @@ def handle_client(client_socket, client_address):
         request_line = request_text.splitlines()[0] if request_text else ""
         request_parts = request_line.split()
         send_body = True
+        allow_header = ""
 
         if len(request_parts) == 3:
             method, path, version = request_parts
-            send_body = method != "HEAD"
+            send_body = method not in ("HEAD", "OPTIONS")
 
             if DEBUG:
                 print(f"Method: {method}")
@@ -52,7 +53,12 @@ def handle_client(client_socket, client_address):
                 print(f"Version: {version}")
                 print(f"[{thread_name}] {client_ip}:{client_port} {method} {path}")
 
-            if method not in ("GET", "HEAD"):
+            if method == "OPTIONS":
+                status_line = "HTTP/1.1 204 No Content"
+                content_type = ""
+                body = b""
+                allow_header = "Allow: GET, HEAD, OPTIONS\r\n"
+            elif method not in ("GET", "HEAD"):
                 status_line = "HTTP/1.1 405 Method Not Allowed"
                 content_type = "text/plain; charset=utf-8"
                 body = "405 Method Not Allowed".encode("utf-8")
@@ -91,9 +97,11 @@ def handle_client(client_socket, client_address):
             content_type = "text/plain; charset=utf-8"
             body = "Bad Request".encode("utf-8")
 
+        content_type_header = f"Content-Type: {content_type}\r\n" if content_type else ""
         response = (
             f"{status_line}\r\n"
-            f"Content-Type: {content_type}\r\n"
+            f"{content_type_header}"
+            f"{allow_header}"
             f"Content-Length: {len(body)}\r\n"
             "Connection: close\r\n"
             "\r\n"
