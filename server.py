@@ -40,9 +40,11 @@ def handle_client(client_socket, client_address):
 
         request_line = request_text.splitlines()[0] if request_text else ""
         request_parts = request_line.split()
+        send_body = True
 
         if len(request_parts) == 3:
             method, path, version = request_parts
+            send_body = method != "HEAD"
 
             if DEBUG:
                 print(f"Method: {method}")
@@ -50,7 +52,7 @@ def handle_client(client_socket, client_address):
                 print(f"Version: {version}")
                 print(f"[{thread_name}] {client_ip}:{client_port} {method} {path}")
 
-            if method != "GET":
+            if method not in ("GET", "HEAD"):
                 status_line = "HTTP/1.1 405 Method Not Allowed"
                 content_type = "text/plain; charset=utf-8"
                 body = "405 Method Not Allowed".encode("utf-8")
@@ -95,7 +97,7 @@ def handle_client(client_socket, client_address):
             f"Content-Length: {len(body)}\r\n"
             "Connection: close\r\n"
             "\r\n"
-        ).encode("utf-8") + body
+        ).encode("utf-8") + (body if send_body else b"")
 
         client_socket.sendall(response)
 
