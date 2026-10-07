@@ -24,6 +24,7 @@ run_benchmark() {
     echo "========================================"
     echo "$name - Run $run"
     echo "========================================"
+    echo
 
     ab -n 1000 -c 10 "$url" | tee "$output_file"
 
@@ -72,3 +73,4 @@ echo "Custom Python Server average mean time/request: $custom_avg_time ms"
 echo "nginx average requests/sec: $nginx_avg_rps"
 echo "nginx average mean time/request: $nginx_avg_time ms"
 echo "nginx is ${ratio}x faster by requests per second."
+echo
